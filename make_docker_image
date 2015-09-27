@@ -1,0 +1,111 @@
+#!/bin/bash -eu
+#
+# Usage : make_docker_image
+#
+# Written by KUSANAGI Mitsuhisa <mikkun@mbg.nifty.com> / Date : 2015-09-28
+
+# Configuration variables
+ARCH='i386'
+INCLUDE='iproute,locales'
+VARIANT='minbase'
+SUITE='jessie'
+TARGET="${SUITE}-${ARCH}"
+MIRROR='http://ftp.jp.debian.org/debian/'
+
+##############################################################################
+# Delete the old working directory
+if [ -d "$TARGET" ] ; then
+    sudo rm -fR "$TARGET"
+fi
+
+# Bootstrap a basic Debian system
+sudo mkdir "$TARGET"
+sudo debootstrap --arch="$ARCH" --include="$INCLUDE" --variant="$VARIANT" \
+     "$SUITE" "$TARGET" "$MIRROR"
+
+cd "$TARGET"
+
+##############################################################################
+# Change the system locale
+sudo cp -f /etc/default/locale etc/default/locale
+sudo cp -f /etc/locale.gen etc/locale.gen
+sudo chroot . dpkg-reconfigure --frontend=noninteractive locales
+
+# Change the timezone
+sudo cp -f /etc/timezone etc/timezone
+sudo chroot . dpkg-reconfigure --frontend=noninteractive tzdata
+
+##############################################################################
+# Recreate directories to mount tmpfs at /dev and procfs at /proc
+sudo rm -fR dev proc
+sudo mkdir -p dev proc
+
+# Tell Docker to use Google's DNS public server
+echo -e 'nameserver 8.8.8.8\nnameserver 8.8.4.4' |
+sudo tee etc/resolv.conf                         > /dev/null
+
+##############################################################################
+# Prevent init scripts from running during install/update
+echo -e '#!/bin/sh\nexit 101' |
+sudo tee usr/sbin/policy-rc.d > /dev/null
+sudo chmod a+x usr/sbin/policy-rc.d
+
+# This file does not apply to debootstrap/Docker images
+sudo rm -f etc/apt/apt.conf.d/01autoremove-kernels
+
+# Force dpkg not to call sync() after package extraction
+echo 'force-unsafe-io'                |
+sudo tee etc/dpkg/dpkg.cfg.d/99docker > /dev/null
+
+# Remove cached packages and metadata to keep images small
+sudo tee etc/apt/apt.conf.d/99docker <<'EOF' > /dev/null
+APT {
+  AutoRemove {
+    SuggestsImportant "false";
+  };
+  Update {
+    Post-Invoke {"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true";};
+  };
+};
+Acquire {
+  CompressionTypes {
+    Order:: "gz";
+  };
+  GzipIndexes "true";
+  Languages "none";
+};
+DPkg {
+  Post-Invoke {"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true";};
+};
+Dir {
+  Cache {
+    pkgcache "";
+    srcpkgcache "";
+  };
+};
+EOF
+
+# Add the updates and security repositories
+if [ "_$SUITE" != '_sid' -a "_$SUITE" != '_unstable' ] ; then
+    sudo sed -i '
+        p; s/ main$/-updates&/; p;
+        s/ [^ ]\+ \([^-]\+\)-/ http:\/\/security.debian.org\/ \1\//
+    ' etc/apt/sources.list
+fi
+
+# Make sure packages are up-to-date and clean
+sudo chroot . apt-get update
+sudo chroot . apt-get dist-upgrade -y
+sudo chroot . apt-get clean
+
+# Delete all the apt list files to shrink the image
+find var/lib/apt/lists \! -name 'lock' -a -type f -print0 |
+sudo xargs -0 rm -f
+
+##############################################################################
+# Create the image
+sudo tar -c . | sudo docker import - local/${TARGET}:${VARIANT}
+echo 'Docker image created successfully.' >&2
+
+cd ..
+exit 0

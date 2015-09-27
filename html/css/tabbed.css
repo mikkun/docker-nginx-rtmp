@@ -1,0 +1,64 @@
+/*! tabbed.css | (c) 2015 KUSANAGI Mitsuhisa */
+/* Globals */
+body {
+    background-color: #CCCCCC;
+    color: #333333;
+    line-height: 1.3;
+}
+a,
+a:visited {
+    color: #FF9900;
+}
+a:active,
+a:hover {
+    color: #0066FF;
+}
+dl {
+    padding: 0 2.1em;
+}
+hr {
+    background-color: #666666;
+    border: 0;
+    height: 1px;
+}
+/* Tabbed interface */
+div.tabs {
+    height: 480px;
+    line-height: 1;
+    margin-bottom: 3.4em;
+    position: relative;
+    width: 640px;
+    z-index: 0;
+}
+div.tabs > div {
+    display: inline;
+}
+div.tabs > div > a {
+    background-color: #666666;
+    color: #000000;
+    font-size: large;
+    font-weight: bolder;
+    outline: none;
+    padding: 0.2em 0.8em;
+    text-decoration: none;
+}
+div.tabs > div:target > a {
+    background-color: #999999;
+    border-top: 0.3em solid #FF9900;
+    color: #FFFFFF;
+}
+div.tabs > div > div {
+    background-color: #999999;
+    color: #000000;
+    height: 100%;
+    line-height: 1.3;
+    padding: 0.5em;
+    position: absolute;
+    top: 1.3em;
+    width: 100%;
+    z-index: -2;
+}
+div.tabs > div:first-child > div,
+div.tabs > div:target > div {
+    z-index: -1;
+}

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>docker-nginx-rtmp</title>
+    <link href="css/tabbed.css" rel="stylesheet" />
+    <link href="http://vjs.zencdn.net/4.12/video-js.css" rel="stylesheet" />
+    <script src="http://vjs.zencdn.net/4.12/video.js"></script>
+    <script src="https://github.com/videojs/videojs-contrib-media-sources/releases/download/v0.1.0/videojs-media-sources.js"></script>
+    <script src="https://github.com/videojs/videojs-contrib-hls/releases/download/v0.16.1/videojs.hls.min.js"></script>
+</head>
+<body>
+    <h1>docker-nginx-rtmp demo page</h1>
+    <div class="tabs">
+        <div id="rtmp">
+            <a href="#rtmp">RTMP</a>
+            <div>
+                <object data="swf/rtmpPlayer.swf" id="rtmpPlayer" type="application/x-shockwave-flash" width="640" height="480">
+                    <param value="false" name="menu" />
+                    <param value="noScale" name="scale" />
+                    <param value="true" name="allowFullscreen" />
+                    <param value="always" name="allowScriptAccess" />
+                    <param value="#000000" name="bgcolor" />
+                    <param value="high" name="quality" />
+                    <param value="opaque" name="wmode" />
+                    <param value="source=mp4:X-15.mp4&amp;server=rtmp://127.0.0.1/vod" name="flashvars" />
+                </object>
+            </div>
+        </div>
+        <div id="hls">
+            <a href="#hls">HLS</a>
+            <div>
+                <video id="VideoJS" class="video-js vjs-default-skin" width="640" height="480" controls="controls">
+                    <source src="http://127.0.0.1/hls/X-15.m3u8" type="application/x-mpegURL" />
+                </video>
+            </div>
+        </div>
+        <div id="about">
+            <a href="#about">ABOUT</a>
+            <div>
+                <p>The following binary files are bundled and used:</p>
+                <dl>
+                    <dt>X-15.mp4</dt>
+                    <dd><a href="https://archive.org/details/SF122">https://archive.org/details/SF122</a></dd>
+                    <dt>rtmpPlayer.swf</dt>
+                    <dd><a href="https://github.com/mikkun/rtmpPlayer">https://github.com/mikkun/rtmpPlayer</a></dd>
+                </dl>
+                <hr />
+                <p>The following JavaScript libraries are loaded:</p>
+                <dl>
+                    <dt>Video.js</dt>
+                    <dd><a href="http://www.videojs.com/">http://www.videojs.com/</a></dd>
+                    <dt>videojs-contrib-media-sources</dt>
+                    <dd><a href="https://github.com/videojs/videojs-contrib-media-sources">https://github.com/videojs/videojs-contrib-media-sources</a></dd>
+                    <dt>videojs-contrib-hls</dt>
+                    <dd><a href="https://github.com/videojs/videojs-contrib-hls">https://github.com/videojs/videojs-contrib-hls</a></dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <p><small>Copyright © 2015 KUSANAGI Mitsuhisa</small></p>
+    <script>var player = videojs("VideoJS");</script>
+</body>
+</html>
